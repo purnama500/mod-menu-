@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Free Fire Xtreme Mod | Dynamic HD Background</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Orbitron', sans-serif;
+            overflow: hidden;
+            background: #000;
+            height: 100vh;
+        }
+
+        /* Dynamic Background Container */
+        .bg-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .bg-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out;
+        }
+
+        .bg-slide.active {
+            opacity: 1;
+        }
+
+        /* Overlay gelap agar teks terbaca */
+        .dark-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(3px);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Particle effect */
+        .particle-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        /* Main Overlay - Draggable */
+        .mod-overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 450px;
+            max-width: 90vw;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(10, 5, 20, 0.95));
+            backdrop-filter: blur(20px);
+            border-radius: 28px;
+            border: 1px solid rgba(0, 255, 255, 0.4);
+            box-shadow: 0 0 50px rgba(0, 255, 255, 0.2), inset 0 0 30px rgba(0, 255, 255, 0.05);
+            z-index: 1000;
+            cursor: default;
+            transition: 0.2s;
+        }
+
+        /* Drag Handle */
+        .drag-handle {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.15), rgba(0, 100, 150, 0.2));
+            border-radius: 28px 28px 0 0;
+            cursor: move;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.3);
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .mod-logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #00ff88, #00ccff);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 22px;
+            box-shadow: 0 0 15px cyan;
+            animation: logoGlow 2s infinite;
+        }
+
+        @keyframes logoGlow {
+            0%, 100% { box-shadow: 0 0 5px cyan; }
+            50% { box-shadow: 0 0 20px cyan; }
+        }
+
+        .mod-title {
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 18px;
+            background: linear-gradient(135deg, #00ff88, #00ccff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .handle-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .handle-btn {
+            background: none;
+            border: none;
+            color: #0ff;
+            font-size: 18px;
+            cursor: pointer;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            transition: 0.2s;
+        }
+
+        .handle-btn:hover {
+            background: rgba(0, 255, 255, 0.2);
+            color: white;
+        }
+
+        /* Content */
+        .mod-content {
+            padding: 20px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .mod-content::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .mod-content::-webkit-scrollbar-track {
+            background: #1a1a2e;
+        }
+
+        .mod-content::-webkit-scrollbar-thumb {
+            background: #0ff;
+            border-radius: 4px;
+        }
+
+        /* Status Bar */
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .status-badge {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 40px;
+            padding: 8px 12px;
+            text-align: center;
+            font-size: 11px;
+            font-weight: bold;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ff4444;
+        }
+
+        .status-dot.active {
+            background: #00ff00;
+            box-shadow: 0 0 5px #0f0;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(0, 0, 0, 0.5));
+            border-radius: 16px;
+            padding: 12px;
+            text-align: center;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+        }
+
+        .stat-icon {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: #88aaff;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0ff;
+            text-shadow: 0 0 5px cyan;
+        }
+
+        /* Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .feature-card {
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 16px;
+            padding: 12px;
+            text-align: center;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            transition: 0.2s;
+        }
+
+        .feature-card:hover {
+            border-color: #0ff;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+
+        .feat-icon {
+            font-size: 28px;
+            margin-bottom: 6px;
+        }
+
+        .feat-name {
+            font-size: 10px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #ccddff;
+        }
+
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 22px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #2a2a4a;
+            border-radius: 22px;
+            transition: 0.3s;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 2px;
+            bottom: 2px;
+            background: #888;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        input:checked + .toggle-slider {
+            background: linear-gradient(135deg, #00ff88, #00ccff);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(22px);
+            background: white;
+        }
+
+        /* Slider */
+        .slider-group {
+            margin-bottom: 20px;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-bottom: 8px;
+            color: #aaccff;
+        }
+
+        .custom-slider {
+            width: 100%;
+            height: 4px;
+            -webkit-appearance: none;
+            background: #2a2a4a;
+            border-radius: 2px;
+        }
+
+        .custom-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #0ff;
+            cursor: pointer;
+            box-shadow: 0 0 8px cyan;
+        }
+
+        /* Action Buttons */
+        .action-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: 'Orbitron', monospace;
+            transition: 0.2s;
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, #00ff88, #00ccff);
+            color: #000;
+            box-shadow: 0 0 15px cyan;
+        }
+
+        .action-btn.secondary {
+            background: rgba(0, 255, 255, 0.2);
+            border: 1px solid #0ff;
+            color: #0ff;
+        }
+
+        .action-btn.danger {
+            background: rgba(255, 50, 50, 0.2);
+            border: 1px solid #ff4444;
+            color: #ff8888;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
+        /* Console */
+        .console {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 16px;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            overflow: hidden;
+        }
+
+        .console-header {
+            padding: 8px 12px;
+            background: rgba(0, 255, 255, 0.1);
+            font-size: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .console-body {
+            padding: 10px;
+            height: 100px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 10px;
+        }
+
+        .log-line {
+            padding: 3px 0;
+            color: #88ffaa;
+            border-left: 2px solid #0ff;
+            padding-left: 8px;
+            margin-bottom: 4px;
+        }
+
+        /* Notification */
+        #notifArea {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1100;
+        }
+
+        .notif {
+            background: linear-gradient(135deg, #0a0a1a, #000);
+            border-left: 4px solid #0ff;
+            padding: 10px 18px;
+            margin-bottom: 10px;
+            border-radius: 12px;
+            color: #0ff;
+            font-size: 12px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Minimized */
+        .mod-overlay.minimized .mod-content {
+            display: none;
+        }
+
+        .mod-overlay.minimized {
+            width: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Dynamic Background -->
+    <div class="bg-container" id="bgContainer"></div>
+    <div class="dark-overlay"></div>
+    <canvas class="particle-overlay" id="particleCanvas"></canvas>
+
+    <!-- Main Overlay -->
+    <div class="mod-overlay" id="modOverlay">
+        <div class="drag-handle" id="dragHandle">
+            <div class="logo-area">
+                <div class="mod-logo">FF⚡</div>
+                <div class="mod-title">XTREME MOD MENU</div>
+            </div>
+            <div class="handle-controls">
+                <button class="handle-btn" id="minimizeBtn">─</button>
+                <button class="handle-btn" id="closeBtn" style="color:#ff5555;">✕</button>
+            </div>
+        </div>
+
+        <div class="mod-content" id="modContent">
+            <!-- Status -->
+            <div class="status-row">
+                <div class="status-badge"><span class="status-dot" id="gameDot"></span><span id="gameStatusText">WAITING</span></div>
+                <div class="status-badge"><span class="status-dot" id="injectDot"></span><span id="injectStatusText">NOT READY</span></div>
+                <div class="status-badge"><span class="status-dot active"></span>ANTI-BAN ON</div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-icon">💀</div><div class="stat-label">KILLS</div><div class="stat-value" id="killStat">0</div></div>
+                <div class="stat-card"><div class="stat-icon">❤️</div><div class="stat-label">HEALTH</div><div class="stat-value" id="healthStat">100</div></div>
+                <div class="stat-card"><div class="stat-icon">🎯</div><div class="stat-label">HS RATE</div><div class="stat-value" id="hsStat">94<span style="font-size:12px">%</span></div></div>
+            </div>
+
+            <!-- Features -->
+            <div class="features-grid">
+                <div class="feature-card"><div class="feat-icon">🎯</div><div class="feat-name">AIMBOT</div><label class="toggle-switch"><input type="checkbox" id="aimbotToggle"><span class="toggle-slider"></span></label></div>
+                <div class="feature-card"><div class="feat-icon">👁️</div><div class="feat-name">WALLHACK</div><label class="toggle-switch"><input type="checkbox" id="wallhackToggle"><span class="toggle-slider"></span></label></div>
+                <div class="feature-card"><div class="feat-icon">⚡</div><div class="feat-name">SPEED</div><label class="toggle-switch"><input type="checkbox" id="speedToggle"><span class="toggle-slider"></span></label></div>
+                <div class="feature-card"><div class="feat-icon">🔫</div><div class="feat-name">NO RECOIL</div><label class="toggle-switch"><input type="checkbox" id="norecoilToggle"><span class="toggle-slider"></span></label></div>
+                <div class="feature-card"><div class="feat-icon">✨</div><div class="feat-name">MAGIC BULLET</div><label class="toggle-switch"><input type="checkbox" id="magicToggle"><span class="toggle-slider"></span></label></div>
+                <div class="feature-card"><div class="feat-icon">🕊️</div><div class="feat-name">FLY HACK</div><label class="toggle-switch"><input type="checkbox" id="flyToggle"><span class="toggle-slider"></span></label></div>
+                <div class="feature-card"><div class="feat-icon">💥</div><div class="feat-name">DAMAGE</div><label class="toggle-switch"><input type="checkbox" id="damageToggle"><span class="toggle-slider"></span></label></div>
+                <div class="feature-card"><div class="feat-icon">📦</div><div class="feat-name">AUTO LOOT</div><label class="toggle-switch"><input type="checkbox" id="autolootToggle"><span class="toggle-slider"></span></label></div>
+                <div class="feature-card"><div class="feat-icon">🛡️</div><div class="feat-name">ANTI-BAN</div><label class="toggle-switch"><input type="checkbox" id="antibanToggle" checked><span class="toggle-slider"></span></label></div>
+            </div>
+
+            <!-- Damage Slider -->
+            <div class="slider-group">
+                <div class="slider-header"><span>💀 DAMAGE MULTIPLIER</span><span id="damageVal">10x</span></div>
+                <input type="range" id="damageSlider" min="1" max="20" step="0.5" value="10" class="custom-slider">
+            </div>
+
+            <!-- Actions -->
+            <div class="action-group">
+                <button class="action-btn primary" id="launchBtn">🚀 LAUNCH & INJECT</button>
+                <button class="action-btn secondary" id="allOnBtn">🔥 ALL ON</button>
+                <button class="action-btn danger" id="allOffBtn">❌ ALL OFF</button>
+            </div>
+
+            <!-- Console -->
+            <div class="console">
+                <div class="console-header"><span>🖥️ SYSTEM LOG</span><button id="clearConsole" style="background:none;border:none;color:#0ff;cursor:pointer;">CLEAR</button></div>
+                <div class="console-body" id="consoleLogs">
+                    <div class="log-line">> System ready</div>
+                    <div class="log-line">> Dynamic background loaded</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="notifArea"></div>
+
+    <script src="dynamic_bg.js"></script>
+    <script src="overlay.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
